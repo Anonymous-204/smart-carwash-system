@@ -58,6 +58,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </li>
 
                 <?php if ($customer): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= $currentPage==='booking.php'?'active':'' ?>"
+                       href="<?= BASE_URL ?>/customer/booking.php">
+                        <i class="fa-solid fa-calendar-check me-1"></i>Đặt lịch
+                    </a>
+                </li>
                 <li class="nav-item dropdown ms-lg-2">
                     <a class="nav-link dropdown-toggle fw-bold" href="#" data-bs-toggle="dropdown">
                         <i class="fa-solid fa-circle-user me-1 text-primary"></i>
@@ -66,7 +72,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
                         <li>
                             <a class="dropdown-item"
-                               href="<?= BASE_URL ?>/customer/index.php">
+                               href="<?= BASE_URL ?>/customer/booking.php">
                                 <i class="fa-solid fa-calendar-check me-2 text-primary"></i>Lịch đặt của tôi
                             </a>
                         </li>
