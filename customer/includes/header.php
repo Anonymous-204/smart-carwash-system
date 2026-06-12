@@ -64,20 +64,34 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         <i class="fa-solid fa-calendar-check me-1"></i>Đặt lịch
                     </a>
                 </li>
+
                 <li class="nav-item dropdown ms-lg-2">
                     <a class="nav-link dropdown-toggle fw-bold" href="#" data-bs-toggle="dropdown">
                         <i class="fa-solid fa-circle-user me-1 text-primary"></i>
                         <?= e($customer['name']) ?>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" style="min-width:220px">
+
                         <li>
-                            <a class="dropdown-item"
-                               href="<?= BASE_URL ?>/customer/booking.php">
-                                <i class="fa-solid fa-calendar-check me-2 text-primary"></i>Lịch đặt của tôi
+                            <a class="dropdown-item <?= $currentPage==='profile.php'?'active':'' ?>"
+                               href="<?= BASE_URL ?>/customer/profile.php">
+                                <i class="fa-solid fa-user me-2 text-primary"></i>Thông tin cá nhân
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item"
+                            <a class="dropdown-item <?= $currentPage==='vehicles.php'?'active':'' ?>"
+                               href="<?= BASE_URL ?>/customer/vehicles.php">
+                                <i class="fa-solid fa-car me-2 text-success"></i>Xe của tôi
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item <?= $currentPage==='booking.php'?'active':'' ?>"
+                               href="<?= BASE_URL ?>/customer/booking.php">
+                                <i class="fa-solid fa-calendar-check me-2 text-info"></i>Lịch đặt của tôi
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item <?= $currentPage==='change_password.php'?'active':'' ?>"
                                href="<?= BASE_URL ?>/customer/auth/change_password.php">
                                 <i class="fa-solid fa-lock me-2 text-warning"></i>Đổi mật khẩu
                             </a>
@@ -91,6 +105,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                         </li>
                     </ul>
                 </li>
+
                 <?php else: ?>
                 <li class="nav-item ms-lg-2">
                     <a class="btn btn-outline-primary px-4"
