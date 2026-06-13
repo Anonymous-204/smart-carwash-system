@@ -216,18 +216,42 @@ include __DIR__ . '/includes/header.php';
     <?php if (!empty($errors)): ?>
     <div class="alert alert-danger alert-dismissible fade show mb-4">
         <?php foreach ($errors as $err): ?>
-            <div><i class="fa-solid fa-circle-exclamation me-1"></i><?= e($err) ?></div>
-        <?php endforeach; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <?php endif; ?>
-
-    <div class="row g-4">
-
-        <div class="col-lg-5">
-
-            <div class="card cardx p-4">
-                <h5 class="fw-bold mb-4">
+       <div class="mb-3">
+                        <label class="form-label fw-semibold">Dịch vụ <span class="text-danger">*</span></label>
+                        <select name="service_id" class="form-select" id="serviceSelect" required>
+                            <option value="">-- Chọn dịch vụ --</option>
+                            <?php foreach ($services as $s): 
+                                $pricing = calculate_price_with_discount($conn, (int)$s['price'], $uid);
+                            ?>
+                                <option value="<?= $s['id'] ?>"
+                                    data-original-price="<?= $pricing['original'] ?>"
+                                    data-final-price="<?= $pricing['final'] ?>"
+                                    data-discount-amount="<?= $pricing['discount_amount'] ?>"
+                                    data-discount-percent="<?= $pricing['discount_percent'] ?>"
+                                    <?= $preSelectService===(int)$s['id']?'selected':'' ?>>
+                                    <?= e($s['name']) ?> – 
+                                    <?php if ($pricing['discount_percent'] > 0): ?>
+                                        <span style="text-decoration: line-through;"><?= money($pricing['original']) ?></span>
+                                        <span style="color: red;">-<?= money($pricing['discount_amount']) ?></span>
+                                        <strong style="color: green;"><?= money($pricing['final']) ?></strong>
+                                    <?php else: ?>
+                                        <?= money($pricing['original']) ?>
+                                    <?php endif; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <!-- Display price breakdown below select -->
+                        <div id="priceBreakdown" class="mt-2 p-2" style="background: #f8f9fa; border-radius: 4px; display: none;">
+                            <div class="small mb-1"><strong>Giá gốc:</strong> <span id="originalPrice"></span></div>
+                            <div class="small mb-1" id="discountRow" style="display: none;">
+                                <strong>Giảm <span id="discountPercent"></span>%:</strong> 
+                                <span style="color: red;">-<span id="discountAmount"></span></span>
+                            </div>
+                            <div class="small" style="border-top: 1px solid #ddd; padding-top: 8px; margin-top: 8px;">
+                                <strong style="color: green;">Thành tiền:</strong> <span id="finalPrice"></span>
+                            </div>
+                        </div>
+                    </div>
                     <i class="fa-solid fa-calendar-plus text-primary me-2"></i>Đặt lịch rửa xe
                 </h5>
 
