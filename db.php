@@ -65,6 +65,31 @@ function scalar($conn, $sql, $default = 0) {
     return $row[0] ?? $default;
 }
 
+function update_customer_rank($conn, $customer_id) {
+    // Get customer's current points
+    $stmt = $conn->prepare("SELECT point FROM users WHERE id = ?");
+    $stmt->bind_param('i', $customer_id);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    $current_points = (int)($result['point'] ?? 0);
+    $stmt->close();
+
+    // Find the highest rank the customer qualifies for
+    $stmt = $conn->prepare(
+        "SELECT id FROM ranks WHERE min_point <= ? ORDER BY min_point DESC LIMIT 1"
+    );
+    $stmt->bind_param('i', $current_points);
+    $stmt->execute();
+    $rank_result = $stmt->get_result()->fetch_assoc();
+    $new_rank_id = $rank_result['id'] ?? 1; // Default to rank 1 (Đồng)
+    $stmt->close();
+
+    // Update user's rank
+    $stmt = $conn->prepare("UPDATE users SET rank_id = ? WHERE id = ?");
+    $stmt->bind_param('ii', $new_rank_id, $customer_id);
+    $stmt->execute();
+    $stmt->close();
+}
 // -------------------------------------------------------
 // Auth helpers – PHP Session + cookie (Hướng B)
 // -------------------------------------------------------
