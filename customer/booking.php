@@ -6,7 +6,28 @@ $uid      = (int)$customer['id'];
 
 $message = '';
 $errors  = [];
-
+// ---------------------------------------------------------------
+// HELPER: Calculate price with discount based on customer rank
+// ---------------------------------------------------------------
+function calculate_price_with_discount($conn, $service_price, $customer_id) {
+    // Get customer's discount from rank
+    $discount_data = $conn->query(
+        "SELECT r.discount FROM users u 
+         LEFT JOIN ranks r ON r.id = u.rank_id 
+         WHERE u.id = $customer_id"
+    )->fetch_assoc();
+    
+    $discount_percent = (int)($discount_data['discount'] ?? 0);
+    $discount_amount = (int)($service_price * $discount_percent / 100);
+    $final_price = $service_price - $discount_amount;
+    
+    return [
+        'original' => $service_price,
+        'discount_percent' => $discount_percent,
+        'discount_amount' => $discount_amount,
+        'final' => $final_price
+    ];
+}
 // ---------------------------------------------------------------
 // THÊM XE
 // ---------------------------------------------------------------
@@ -216,17 +237,41 @@ include __DIR__ . '/includes/header.php';
                     </div>
                 <?php else: ?>
                 <form method="post" novalidate>
-                    <div class="mb-3">
+               //line 219                       <div class="mb-3">
                         <label class="form-label fw-semibold">Dịch vụ <span class="text-danger">*</span></label>
-                        <select name="service_id" class="form-select" required>
+                        <select name="service_id" class="form-select" id="serviceSelect" required>
                             <option value="">-- Chọn dịch vụ --</option>
-                            <?php foreach ($services as $s): ?>
+                            <?php foreach ($services as $s): 
+                                $pricing = calculate_price_with_discount($conn, (int)$s['price'], $uid);
+                            ?>
                                 <option value="<?= $s['id'] ?>"
+                                    data-original-price="<?= $pricing['original'] ?>"
+                                    data-final-price="<?= $pricing['final'] ?>"
+                                    data-discount-amount="<?= $pricing['discount_amount'] ?>"
+                                    data-discount-percent="<?= $pricing['discount_percent'] ?>"
                                     <?= $preSelectService===(int)$s['id']?'selected':'' ?>>
-                                    <?= e($s['name']) ?> – <?= money($s['price']) ?>
+                                    <?= e($s['name']) ?> – 
+                                    <?php if ($pricing['discount_percent'] > 0): ?>
+                                        <span style="text-decoration: line-through;"><?= money($pricing['original']) ?></span>
+                                        <span style="color: red;">-<?= money($pricing['discount_amount']) ?></span>
+                                        <strong style="color: green;"><?= money($pricing['final']) ?></strong>
+                                    <?php else: ?>
+                                        <?= money($pricing['original']) ?>
+                                    <?php endif; ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
+                        <!-- Display price breakdown below select -->
+                        <div id="priceBreakdown" class="mt-2 p-2" style="background: #f8f9fa; border-radius: 4px; display: none;">
+                            <div class="small mb-1"><strong>Giá gốc:</strong> <span id="originalPrice"></span></div>
+                            <div class="small mb-1" id="discountRow" style="display: none;">
+                                <strong>Giảm <span id="discountPercent"></span>%:</strong> 
+                                <span style="color: red;">-<span id="discountAmount"></span></span>
+                            </div>
+                            <div class="small" style="border-top: 1px solid #ddd; padding-top: 8px; margin-top: 8px;">
+                                <strong style="color: green;">Thành tiền:</strong> <span id="finalPrice"></span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -368,6 +413,17 @@ include __DIR__ . '/includes/header.php';
                                     &nbsp;|&nbsp;
                                     <i class="fa-solid fa-car me-1"></i><?= e($o['license_plate']) ?>
                                 </small>
+                                <!-- Show points earned if order is completed -->
+                                <?php if ($o['status'] === 'COMPLETED'): 
+                                    $points_earned = (int)($o['total'] / 100000) * 10;
+                                    if ($points_earned > 0): ?>
+                                    <div class="mt-2">
+                                        <span class="badge text-bg-success">
+                                            <i class="fa-solid fa-star me-1"></i>Nhận <?= $points_earned ?> điểm
+                                        </span>
+                                    </div>
+                                    <?php endif; ?>
+                                <?php endif; ?>
                             </div>
                             <div class="text-end">
                                 <span class="order-status-badge"><?= status_badge($o['status']) ?></span>
@@ -460,7 +516,43 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 3000); // Bạn có thể tăng/giảm thời gian delay tại đây (ví dụ 3000 = 3 giây)
 });
 </script>
+<script>
+document.getElementById('serviceSelect').addEventListener('change', function() {
+    const option = this.options[this.selectedIndex];
+    const originalPrice = option.dataset.originalPrice;
+    const finalPrice = option.dataset.finalPrice;
+    const discountAmount = option.dataset.discountAmount;
+    const discountPercent = option.dataset.discountPercent;
+    
+    if (originalPrice) {
+        document.getElementById('priceBreakdown').style.display = 'block';
+        document.getElementById('originalPrice').textContent = new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(originalPrice).replace('₫', '').trim() + ' đ';
+        
+        if (discountPercent > 0) {
+            document.getElementById('discountRow').style.display = 'block';
+            document.getElementById('discountPercent').textContent = discountPercent;
+            document.getElementById('discountAmount').textContent = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(discountAmount).replace('₫', '').trim() + ' đ';
+        } else {
+            document.getElementById('discountRow').style.display = 'none';
+        }
+        
+        document.getElementById('finalPrice').textContent = new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(finalPrice).replace('₫', '').trim() + ' đ';
+    } else {
+        document.getElementById('priceBreakdown').style.display = 'none';
+    }
+});
+</script>
 
+<?php include __DIR__ . '/includes/footer.php'; ?>
 <?php include __DIR__ . '/includes/footer.php'; ?>
 <?php
 require_once __DIR__ . '/../db.php';
