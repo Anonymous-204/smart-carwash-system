@@ -14,6 +14,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $stmt->bind_param("issis", $id, $old, $new, $adminId, $note);
     $stmt->execute();
     $message = "Đã cập nhật trạng thái lịch đặt.";
+    // Chỉ cộng điểm khi trạng thái MỚI là COMPLETED và trạng thái CŨ chưa phải là COMPLETED (tránh cộng dồn nhiều lần)
+    if ($new === 'COMPLETED' && $old !== 'COMPLETED') {
+        // Lấy thông tin khách hàng và tổng tiền của đơn
+        $res_order = $conn->query("SELECT customer_id, total FROM orders WHERE id = $id");
+        if ($res_order && $row_order = $res_order->fetch_assoc()) {
+            $customer_id = (int)$row_order['customer_id'];
+            $total_price = (int)$row_order['total'];
+
+            // Tính điểm: Cứ 100.000đ được 10 điểm
+            $points_earned = floor($total_price / 100000) * 10;
+
+            if ($points_earned > 0 && $customer_id > 0) {
+                // 1. Cập nhật cộng điểm vào bảng users (Dùng COALESCE phòng trường hợp điểm đang là NULL)
+                $conn->query("UPDATE users SET points = COALESCE(points, 0) + $points_earned WHERE id = $customer_id");
+
+                // 2. Lấy số điểm mới nhất để xét hạng
+                $res_pts = $conn->query("SELECT points FROM users WHERE id = $customer_id");
+                if ($res_pts && $row_pts = $res_pts->fetch_assoc()) {
+                    $current_points = (int)$row_pts['points'];
+                    
+                    // 3. Logic xét hạng (Nhóm bạn có thể tự đổi mốc điểm)
+                    $new_rank = 'Bình thường';
+                    if ($current_points >= 1000) {
+                        $new_rank = 'Kim Cương';
+                    } elseif ($current_points >= 500) {
+                        $new_rank = 'Vàng';
+                    } elseif ($current_points >= 200) {
+                        $new_rank = 'Bạc';
+                    }
+
+                    // 4. Cập nhật hạng vào bảng users
+                    $stmt_rank = $conn->prepare("UPDATE users SET rank = ? WHERE id = ?");
+                    $stmt_rank->bind_param("si", $new_rank, $customer_id);
+                    $stmt_rank->execute();
+                    
+                    // (Nếu có bảng khác cần cập nhật, bạn copy 3 dòng prepare, bind_param, execute ở trên và sửa câu SQL)
+                }
+            }
+        }
+    }
 }
 $search = trim($_GET['search'] ?? '');
 $status = trim($_GET['status'] ?? '');
