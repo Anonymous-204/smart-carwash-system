@@ -8,6 +8,28 @@ $message = '';
 $errors  = [];
 
 // ---------------------------------------------------------------
+// HELPER: Calculate price with discount based on customer rank
+// ---------------------------------------------------------------
+function calculate_price_with_discount($conn, $service_price, $customer_id) {
+    // Get customer's discount from rank
+    $discount_data = $conn->query(
+        "SELECT r.discount FROM users u 
+         LEFT JOIN ranks r ON r.id = u.rank_id 
+         WHERE u.id = $customer_id"
+    )->fetch_assoc();
+    
+    $discount_percent = (int)($discount_data['discount'] ?? 0);
+    $discount_amount = (int)($service_price * $discount_percent / 100);
+    $final_price = $service_price - $discount_amount;
+    
+    return [
+        'original' => $service_price,
+        'discount_percent' => $discount_percent,
+        'discount_amount' => $discount_amount,
+        'final' => $final_price
+    ];
+}
+// ---------------------------------------------------------------
 // THÊM XE
 // ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_vehicle'])) {
