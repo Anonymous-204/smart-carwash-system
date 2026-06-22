@@ -433,7 +433,14 @@ include __DIR__ . '/includes/header.php';
                                             <i class="fa-solid fa-star me-1"></i>Nhận <?= $points_earned ?> điểm
                                         </span>
                                     </div>
-                                <?php endif; endif; ?>
+                                <?php endif; ?>
+                                    <div class="mt-2">
+                                        <a href="feedback.php?order_id=<?= $o['id'] ?>"
+                                           class="btn btn-sm btn-outline-warning">
+                                            <i class="fa-solid fa-comment-dots me-1"></i>Đánh giá dịch vụ
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             <div class="text-end">
                                 <span class="order-status-badge"><?= status_badge($o['status']) ?></span><br>
