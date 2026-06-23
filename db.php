@@ -1,6 +1,6 @@
 <?php
 
-define('BASE_URL', '/smart-carwash-system');
+define('BASE_URL', 'http://localhost/smart-carwash-system');
 
 $DB_HOST = "127.0.0.1";
 $DB_USER = "root";

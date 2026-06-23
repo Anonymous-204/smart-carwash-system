@@ -133,3 +133,17 @@ CREATE TABLE IF NOT EXISTS announcements (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Thêm vào database rua_xe
+-- Bảng lưu token đặt lại mật khẩu (mỗi token hết hạn sau 15 phút)
+
+CREATE TABLE IF NOT EXISTS `password_resets` (
+  `id`         INT AUTO_INCREMENT PRIMARY KEY,
+  `email`      VARCHAR(150) NOT NULL,
+  `token`      VARCHAR(64)  NOT NULL UNIQUE,
+  `expires_at` DATETIME     NOT NULL,
+  `used`       TINYINT(1)   NOT NULL DEFAULT 0,
+  `created_at` DATETIME     DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_pr_token` (`token`),
+  INDEX `idx_pr_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

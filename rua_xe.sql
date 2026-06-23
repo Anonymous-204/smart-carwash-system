@@ -79,7 +79,19 @@ CREATE TABLE `sessions` (
   CONSTRAINT `fk_sessions_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 5. Xe của khách
+-- 5. Token đặt lại mật khẩu qua email
+CREATE TABLE `password_resets` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `email` VARCHAR(150) NOT NULL,
+  `token` VARCHAR(64) NOT NULL UNIQUE COMMENT 'bin2hex(random_bytes(32))',
+  `expires_at` DATETIME NOT NULL COMMENT 'Hết hạn sau 15 phút',
+  `used` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_pr_token` (`token`),
+  INDEX `idx_pr_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 6. Xe của khách
 CREATE TABLE `vehicles` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
@@ -100,7 +112,7 @@ INSERT INTO `vehicles` (`id`,`user_id`,`brand`,`vehicle_type`,`license_plate`,`c
 (4,7,'Mazda','Hatchback','51G-555.55','Đỏ'),
 (5,8,'Ford','Bán tải','30K-777.89','Xanh');
 
--- 6. Dịch vụ
+-- 7. Dịch vụ
 CREATE TABLE `services` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(255) NOT NULL,
@@ -121,7 +133,7 @@ INSERT INTO `services` (`id`,`name`,`duration`,`description`,`price`,`is_active`
 (5,'Vệ sinh nội thất & khử mùi',90,'Dọn nội thất, khử mùi, diệt khuẩn bằng hơi nước nóng.',450000,1),
 (6,'Phủ Ceramic bảo vệ sơn',120,'Đánh bóng toàn thân xe, phủ lớp Ceramic tăng độ bóng và chống trầy.',1500000,1);
 
--- 7. Đơn đặt lịch
+-- 8. Đơn đặt lịch
 CREATE TABLE `orders` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `customer_id` INT NOT NULL,
@@ -152,7 +164,7 @@ INSERT INTO `orders` (`id`,`customer_id`,`staff_id`,`vehicle_id`,`pickup_by_staf
 (5,8,NULL,5,1,0,1,'2026-06-12 15:00:00',150000,'PENDING','Cần gọi xác nhận trước khi đến.','2026-06-11 14:20:00'),
 (6,4,2,1,0,0,1,'2026-06-13 16:30:00',50000,'PENDING',NULL,'2026-06-11 17:30:00');
 
--- 8. Chi tiết đơn
+-- 9. Chi tiết đơn
 CREATE TABLE `order_details` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `order_id` INT NOT NULL,
@@ -167,7 +179,7 @@ CREATE TABLE `order_details` (
 INSERT INTO `order_details` (`order_id`,`service_id`,`price`) VALUES
 (1,2,80000),(2,3,150000),(3,6,1500000),(4,5,450000),(5,3,150000),(6,1,50000);
 
--- 9. Thanh toán
+-- 10. Thanh toán
 CREATE TABLE `payments` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `order_id` INT NOT NULL,
@@ -189,7 +201,7 @@ INSERT INTO `payments` (`order_id`,`method`,`amount`,`status`,`paid_at`,`transac
 (5,'CASH',150000,'UNPAID',NULL,NULL),
 (6,'CASH',50000,'UNPAID',NULL,NULL);
 
--- 10. Lịch sử đổi trạng thái đơn
+-- 11. Lịch sử đổi trạng thái đơn
 CREATE TABLE `order_status_logs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `order_id` INT NOT NULL,
@@ -210,7 +222,7 @@ INSERT INTO `order_status_logs` (`order_id`,`old_status`,`new_status`,`changed_b
 (2,'PENDING','COMPLETED',2,'Hoàn tất và đã thanh toán'),
 (3,NULL,'PROCESSING',3,'Đang xử lý tại chi nhánh Cầu Giấy');
 
--- 11. Feedback
+-- 12. Feedback
 CREATE TABLE `feedbacks` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `order_id` INT NOT NULL,
@@ -224,7 +236,7 @@ INSERT INTO `feedbacks` (`order_id`,`rating`,`content`) VALUES
 (1,5,'Dịch vụ nhanh, xe sạch và nhân viên tư vấn nhiệt tình.'),
 (2,4,'Có dịch vụ đón xe tiện, lần sau sẽ tiếp tục sử dụng.');
 
--- 12. Thông báo
+-- 13. Thông báo
 CREATE TABLE `announcements` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `title` VARCHAR(255) NOT NULL,
@@ -236,4 +248,3 @@ CREATE TABLE `announcements` (
 INSERT INTO `announcements` (`title`,`content`) VALUES
 ('Khuyến mãi tháng 6','Giảm 10% cho khách hàng hạng Vàng và Kim cương.'),
 ('Thông báo lịch bảo trì','Hệ thống tạm ngưng nhận lịch online từ 22:00 đến 23:00 ngày 15/06.');
-
